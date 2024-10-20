@@ -30,7 +30,7 @@ class TestUser:
                     """of Classic Hollywood cinema."""
             )
 
-            user.password_hash = "whosafraidofvirginiawoolf"
+            user.password = "whosafraidofvirginiawoolf"  # Set the password here
             
             db.session.add(user)
             db.session.commit()
@@ -91,7 +91,8 @@ class TestUser:
             db.session.commit()
 
             user = User(username="Prabhdip")
-
+            user.password = "some_secure_password"  # Set a password for the user
+            
             recipe_1 = Recipe(
                 title="Delicious Shed Ham",
                 instructions="""Or kind rest bred with am shed then. In""" + \

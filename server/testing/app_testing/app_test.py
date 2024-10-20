@@ -83,49 +83,50 @@ class TestCheckSession:
         '''returns JSON for the user's data if there is an active session.'''
         
         with app.app_context():
-            
             User.query.delete()
             db.session.commit()
         
         with app.test_client() as client:
-
-            # create a new first record
-            client.post('/signup', json={
+            # Create a new user
+            response = client.post('/signup', json={
                 'username': 'ashketchum',
                 'password': 'pikachu',
                 'bio': '''I wanna be the very best
-                        Like no one ever was
-                        To catch them is my real test
-                        To train them is my cause
-                        I will travel across the land
-                        Searching far and wide
-                        Teach Pokémon to understand
-                        The power that's inside''',
+                          Like no one ever was
+                          To catch them is my real test
+                          To train them is my cause
+                          I will travel across the land
+                          Searching far and wide
+                          Teach Pokémon to understand
+                          The power that's inside''',
                 'image_url': 'https://cdn.vox-cdn.com/thumbor/I3GEucLDPT6sRdISXmY_Yh8IzDw=/0x0:1920x1080/1820x1024/filters:focal(960x540:961x541)/cdn.vox-cdn.com/uploads/chorus_asset/file/24185682/Ash_Ketchum_World_Champion_Screenshot_4.jpg',
             })
             
+            assert response.status_code == 201  # Check if user was created successfully
+
+            # Query the user to get the actual user ID
+            created_user = User.query.filter_by(username='ashketchum').first()
+            
             with client.session_transaction() as session:
-                
-                session['user_id'] = 1
+                session['user_id'] = created_user.id  # Use the ID from the created user
 
             response = client.get('/check_session')
             response_json = response.json
 
-            assert response_json['id'] == 1
-            assert response_json['username']
+            assert response.status_code == 200  # Check if the status code is 200
+            assert response_json['id'] == created_user.id  # Check if returned ID matches
+            assert response_json['username'] == 'ashketchum'  # Check the username is correct
 
     def test_401s_for_no_session(self):
         '''returns a 401 Unauthorized status code if there is no active session.'''
         
         with app.test_client() as client:
-            
             with client.session_transaction() as session:
-                
-                session['user_id'] = None
+                session['user_id'] = None  # Set user_id to None to simulate no session
 
             response = client.get('/check_session')
-            
-            assert response.status_code == 401
+            assert response.status_code == 401  # Check if unauthorized status code is returned
+
 
 class TestLogin:
     '''Login resource in app.py'''
